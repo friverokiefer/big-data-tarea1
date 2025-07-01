@@ -1,37 +1,34 @@
+# mongodb_handler.py
+
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 
-# Cargar variables de entorno desde .env
-dotenv_loaded = load_dotenv()
+# Carga variables de entorno de .env
+load_dotenv()
 
-# Obtener URI de MongoDB (obligatorio)
+# URI obligatoria
 MONGO_URI = os.getenv("MONGO_URI")
 if not MONGO_URI:
-    raise RuntimeError(
-        "❌ No se encontró la variable MONGO_URI en el entorno. "
-        "Por favor, define MONGO_URI en tu archivo .env"
-    )
+    raise RuntimeError("❌ Define MONGO_URI en tu .env")
 
-# Parámetros de conexión
-db_name = "imdb_scrapper"
-collection_name = "top250_movies"
+# Base y colección dinámicas
+MONGO_DB = os.getenv("MONGO_DB", "movie-analysis-2025")
+MONGO_COLL = os.getenv("MONGO_COLL", "imdb-scraper")
 
-# Conexión a MongoDB con validación mínima
-test_timeout = 5000
-client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=test_timeout)
-try:
-    client.server_info()  # Forzar conexión
-except Exception as e:
-    raise RuntimeError(f"❌ No se pudo conectar a MongoDB: {e}")
-
-db = client[db_name]
-collection = db[collection_name]
+# Conexión a Mongo
+client = MongoClient(MONGO_URI)
+db = client[MONGO_DB]
+collection = db[MONGO_COLL]
 
 
 def insert_movie(movie_data: dict):
     """
-    Inserta un documento de película en MongoDB.
+    Inserta un documento, imprimiendo éxito o error.
     """
-    result = collection.insert_one(movie_data)
-    print(f"✅ Película insertada con _id: {result.inserted_id}")
+    try:
+        result = collection.insert_one(movie_data)
+        print(
+            f"✅ Insertada '{movie_data.get('title')}' ({movie_data.get('year')}) → _id: {result.inserted_id}")
+    except Exception as e:
+        print(f"❌ Error al insertar '{movie_data.get('title')}': {e}")
