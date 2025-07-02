@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# imdb_scraper_500.py
-
 import os
 import time
 import html
@@ -14,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-# --- 1) Config MongoDB from .env ---
+# --- 1) Se obtienen las variables necesarias para la configuración de conexión con MongoDB ---
 load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 MONGO_DB = os.getenv("MONGO_DB",   "movie-analysis-2025")
@@ -25,15 +22,15 @@ if not MONGO_URI:
 client = MongoClient(MONGO_URI)
 collection = client[MONGO_DB][MONGO_COLL]
 
-# --- 2) Selenium en español ---
+# --- 2) Configuración Selenium ---
 opts = Options()
-# opts.add_argument("--headless")  # descomenta para no ver el navegador
+# opts.add_argument("--headless")  # descomentar esta linea de codigo para NO ver el navegador
 opts.add_argument("--disable-gpu")
 opts.add_argument("--no-sandbox")
 opts.add_experimental_option("prefs", {"intl.accept_languages": "es-ES"})
 service = Service(ChromeDriverManager().install())
 
-# --- 3) Tus dos URLs de Top 500, detailed mode con count=250 ---
+# --- 3) Se indican las URL y reglas de formato para extraer los datos ---
 LIST_URLS = [
     "https://www.imdb.com/es-es/list/ls050782187/?view=detailed&count=250&page=1",
     "https://www.imdb.com/es-es/list/ls050782187/?view=detailed&count=250&page=2",
@@ -145,7 +142,7 @@ def main():
 
     driver.quit()
 
-    # deduplica por (title, year), preservando el primero
+    # elimina duplicados por (title, year), conservando el primero
     seen = set()
     unique = []
     for m in all_movies:
@@ -156,7 +153,7 @@ def main():
     movies = unique[:500]
     print(f"\n🔢 Total únicos preparados: {len(movies)}\n")
 
-    # inserta sólo nuevos
+    # inserta sólo nuevos registros de peliculas
     for i, m in enumerate(movies, start=1):
         if collection.find_one({"title": m["title"], "year": m["year"]}):
             print(f"{i}/{len(movies)} → '{m['title']}' ya existe, omitiendo")

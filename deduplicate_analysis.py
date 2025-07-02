@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# deduplicate_analysis.py
-
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
